@@ -3,35 +3,40 @@ using System;
 
 Console.WriteLine("=== Confluent Kafka Producer Test ===\n");
 
+// Parse command line arguments
+if (args.Length == 0 || args.Contains("--help") || args.Contains("-h"))
+{
+    ShowHelp();
+    return;
+}
+
+string? bootstrapServers = GetArgument(args, "--broker", "-b");
+string? username = GetArgument(args, "--username", "-u");
+string? password = GetArgument(args, "--password", "-p");
+
+if (string.IsNullOrWhiteSpace(bootstrapServers))
+{
+    Console.WriteLine("Error: Bootstrap Servers (--broker) is required.");
+    Console.WriteLine("Use --help for usage information.");
+    return;
+}
+
+if (string.IsNullOrWhiteSpace(username))
+{
+    Console.WriteLine("Error: Username (--username) is required.");
+    Console.WriteLine("Use --help for usage information.");
+    return;
+}
+
+if (string.IsNullOrWhiteSpace(password))
+{
+    Console.WriteLine("Error: Password (--password) is required.");
+    Console.WriteLine("Use --help for usage information.");
+    return;
+}
+
 try
 {
-    // Get user input for Kafka configuration
-    Console.Write("Enter Kafka Broker URL (Bootstrap Servers): ");
-    string? bootstrapServers = Console.ReadLine();
-    
-    if (string.IsNullOrWhiteSpace(bootstrapServers))
-    {
-        Console.WriteLine("Error: Bootstrap Servers cannot be empty.");
-        return;
-    }
-
-    Console.Write("Enter SASL Username: ");
-    string? username = Console.ReadLine();
-    
-    if (string.IsNullOrWhiteSpace(username))
-    {
-        Console.WriteLine("Error: Username cannot be empty.");
-        return;
-    }
-
-    Console.Write("Enter SASL Password: ");
-    string? password = Console.ReadLine();
-    
-    if (string.IsNullOrWhiteSpace(password))
-    {
-        Console.WriteLine("Error: Password cannot be empty.");
-        return;
-    }
 
     Console.WriteLine("\n--- Creating Producer Configuration ---");
     
@@ -195,32 +200,32 @@ catch (Exception ex)
     Console.WriteLine($"  Stack Trace:\n{ex.StackTrace}");
 }
 
-Console.WriteLine("\nPress any key to exit...");
-Console.ReadKey();
-
-// Helper method to read password with masking
-static string ReadPassword()
+// Helper methods for command line argument parsing
+static void ShowHelp()
 {
-    string password = "";
-    ConsoleKeyInfo key;
+    Console.WriteLine("Usage: KafkaTester --broker <url> --username <user> --password <pass>");
+    Console.WriteLine();
+    Console.WriteLine("Required Arguments:");
+    Console.WriteLine("  --broker, -b <url>       Kafka bootstrap servers (e.g., broker.example.com:9092)");
+    Console.WriteLine("  --username, -u <user>    SASL username");
+    Console.WriteLine("  --password, -p <pass>    SASL password");
+    Console.WriteLine();
+    Console.WriteLine("Options:");
+    Console.WriteLine("  --help, -h              Show this help message");
+    Console.WriteLine();
+    Console.WriteLine("Example:");
+    Console.WriteLine("  KafkaTester --broker pkc-abc.us-east-1.aws.confluent.cloud:9092 --username myuser --password mypass");
+}
 
-    do
+static string? GetArgument(string[] args, string longName, string shortName)
+{
+    for (int i = 0; i < args.Length - 1; i++)
     {
-        key = Console.ReadKey(true);
-
-        // Backspace handling
-        if (key.Key == ConsoleKey.Backspace && password.Length > 0)
+        if (args[i].Equals(longName, StringComparison.OrdinalIgnoreCase) || 
+            args[i].Equals(shortName, StringComparison.OrdinalIgnoreCase))
         {
-            password = password[0..^1];
-            Console.Write("\b \b");
+            return args[i + 1];
         }
-        // Normal character
-        else if (!char.IsControl(key.KeyChar))
-        {
-            password += key.KeyChar;
-            Console.Write("*");
-        }
-    } while (key.Key != ConsoleKey.Enter);
-
-    return password;
+    }
+    return null;
 }
