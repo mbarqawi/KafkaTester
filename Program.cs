@@ -25,11 +25,11 @@ try
     }
 
     Console.Write("Enter SASL Password: ");
-    string? password = ReadPassword();
+    string? password = Console.ReadLine();
     
     if (string.IsNullOrWhiteSpace(password))
     {
-        Console.WriteLine("\nError: Password cannot be empty.");
+        Console.WriteLine("Error: Password cannot be empty.");
         return;
     }
 
@@ -57,18 +57,23 @@ try
         Console.WriteLine($"  Security Protocol: {messageProducerConfig.SecurityProtocol}");
         Console.WriteLine($"  SASL Mechanism: {messageProducerConfig.SaslMechanism}");
         Console.WriteLine($"  Username: {messageProducerConfig.SaslUsername}");
+        Console.WriteLine($"  Password: {messageProducerConfig.SaslPassword}");
         Console.WriteLine($"  Acks: {messageProducerConfig.Acks}");
         Console.WriteLine($"  Enable Idempotence: {messageProducerConfig.EnableIdempotence}");
         Console.WriteLine($"  Compression Type: {messageProducerConfig.CompressionType}");
     }
     catch (ArgumentException ex)
     {
-        Console.WriteLine($"✗ Configuration Error: Invalid configuration parameter - {ex.Message}");
+        Console.WriteLine($"✗ Configuration Error: Invalid configuration parameter");
+        Console.WriteLine($"  Message: {ex.Message}");
+        Console.WriteLine($"  Stack Trace:\n{ex.StackTrace}");
         return;
     }
     catch (Exception ex)
     {
-        Console.WriteLine($"✗ Unexpected Error during configuration: {ex.GetType().Name} - {ex.Message}");
+        Console.WriteLine($"✗ Unexpected Error during configuration: {ex.GetType().Name}");
+        Console.WriteLine($"  Message: {ex.Message}");
+        Console.WriteLine($"  Stack Trace:\n{ex.StackTrace}");
         return;
     }
 
@@ -103,12 +108,16 @@ try
         Console.WriteLine($"  Error Code: {ex.Error.Code}");
         Console.WriteLine($"  Error Reason: {ex.Error.Reason}");
         Console.WriteLine($"  Is Fatal: {ex.Error.IsFatal}");
+        Console.WriteLine($"  Message: {ex.Message}");
+        Console.WriteLine($"  Stack Trace:\n{ex.StackTrace}");
     }
     catch (KafkaException ex)
     {
         Console.WriteLine($"✗ Kafka Error: {ex.Error.Code}");
         Console.WriteLine($"  Reason: {ex.Error.Reason}");
         Console.WriteLine($"  Is Fatal: {ex.Error.IsFatal}");
+        Console.WriteLine($"  Message: {ex.Message}");
+        Console.WriteLine($"  Stack Trace:\n{ex.StackTrace}");
         
         // Provide specific guidance based on error code
         switch (ex.Error.Code)
@@ -137,24 +146,28 @@ try
     {
         Console.WriteLine($"✗ Invalid Operation: {ex.Message}");
         Console.WriteLine("  This may indicate an issue with the producer configuration or state.");
+        Console.WriteLine($"  Stack Trace:\n{ex.StackTrace}");
     }
     catch (System.Net.Sockets.SocketException ex)
     {
         Console.WriteLine($"✗ Network Error: Failed to establish socket connection");
         Console.WriteLine($"  Error Code: {ex.SocketErrorCode}");
         Console.WriteLine($"  Message: {ex.Message}");
+        Console.WriteLine($"  Stack Trace:\n{ex.StackTrace}");
         Console.WriteLine("\n  → Please verify the broker URL and ensure the network is accessible.");
     }
     catch (TimeoutException ex)
     {
         Console.WriteLine($"✗ Timeout Error: Operation timed out");
         Console.WriteLine($"  Message: {ex.Message}");
+        Console.WriteLine($"  Stack Trace:\n{ex.StackTrace}");
         Console.WriteLine("\n  → The broker may be unreachable or not responding. Check the broker URL and network connectivity.");
     }
     catch (UnauthorizedAccessException ex)
     {
         Console.WriteLine($"✗ Authorization Error: Access denied");
         Console.WriteLine($"  Message: {ex.Message}");
+        Console.WriteLine($"  Stack Trace:\n{ex.StackTrace}");
         Console.WriteLine("\n  → Check your credentials and permissions.");
     }
     catch (Exception ex)
@@ -179,6 +192,7 @@ catch (Exception ex)
 {
     Console.WriteLine($"\n✗ Fatal Error: {ex.GetType().Name}");
     Console.WriteLine($"  Message: {ex.Message}");
+    Console.WriteLine($"  Stack Trace:\n{ex.StackTrace}");
 }
 
 Console.WriteLine("\nPress any key to exit...");

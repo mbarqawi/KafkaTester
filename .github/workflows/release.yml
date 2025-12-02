@@ -36,22 +36,10 @@ jobs:
     - name: Publish Windows x64
       run: dotnet publish -c Release -r win-x64 --self-contained -p:PublishSingleFile=true -p:PublishTrimmed=true -o ./publish/win-x64
     
-    - name: Publish Linux x64
-      run: dotnet publish -c Release -r linux-x64 --self-contained -p:PublishSingleFile=true -p:PublishTrimmed=true -o ./publish/linux-x64
-    
-    - name: Publish macOS x64
-      run: dotnet publish -c Release -r osx-x64 --self-contained -p:PublishSingleFile=true -p:PublishTrimmed=true -o ./publish/osx-x64
-    
-    - name: Publish macOS ARM64
-      run: dotnet publish -c Release -r osx-arm64 --self-contained -p:PublishSingleFile=true -p:PublishTrimmed=true -o ./publish/osx-arm64
-    
-    - name: Create ZIP archives
+    - name: Create ZIP archive
       run: |
         cd publish
         zip -r ../KafkaTester-win-x64.zip win-x64/
-        tar -czf ../KafkaTester-linux-x64.tar.gz -C linux-x64 .
-        tar -czf ../KafkaTester-osx-x64.tar.gz -C osx-x64 .
-        tar -czf ../KafkaTester-osx-arm64.tar.gz -C osx-arm64 .
         cd ..
     
     - name: Extract version from tag
@@ -66,32 +54,26 @@ jobs:
     - name: Create Release
       uses: softprops/action-gh-release@v1
       with:
+        tag_name: ${{ steps.get_version.outputs.VERSION }}
         name: Release ${{ steps.get_version.outputs.VERSION }}
         body: |
           ## Kafka Tester ${{ steps.get_version.outputs.VERSION }}
           
-          ### Downloads
-          Download the appropriate version for your operating system:
-          - **Windows**: KafkaTester-win-x64.zip
-          - **Linux**: KafkaTester-linux-x64.tar.gz
-          - **macOS (Intel)**: KafkaTester-osx-x64.tar.gz
-          - **macOS (Apple Silicon)**: KafkaTester-osx-arm64.tar.gz
+          ### Download
+          - **Windows x64**: KafkaTester-win-x64.zip
           
           ### What's New
           - Bug fixes and improvements
           
           ### Usage
-          1. Download and extract the archive for your platform
-          2. Run the executable
+          1. Download and extract KafkaTester-win-x64.zip
+          2. Run KafkaTester.exe
           3. Follow the prompts to connect to your Kafka cluster
           
           ---
           *Built with GitHub Copilot and GitHub Actions*
         files: |
           KafkaTester-win-x64.zip
-          KafkaTester-linux-x64.tar.gz
-          KafkaTester-osx-x64.tar.gz
-          KafkaTester-osx-arm64.tar.gz
         draft: false
         prerelease: false
       env:
