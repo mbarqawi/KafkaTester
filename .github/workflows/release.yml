@@ -6,7 +6,93 @@ on:
       - 'v*.*.*'  # Triggers on version tags like v1.0.0, v2.1.3, etc.
   workflow_dispatch:  # Allows manual trigger from GitHub Actions tab
     inputs:
-      version:
+      version:    name: Create Release
+    
+    on:
+      push:
+        tags:
+          - 'v*.*.*'  # Triggers on version tags like v1.0.0, v2.1.3, etc.
+      workflow_dispatch:  # Allows manual trigger from GitHub Actions tab
+        inputs:
+          version:
+            description: 'Release version (e.g., v1.0.0)'
+            required: true
+            default: 'v1.0.0'
+    
+    jobs:
+      build-and-release:
+        runs-on: ubuntu-latest
+        
+        permissions:
+          contents: write
+        
+        steps:
+        - name: Checkout code
+          uses: actions/checkout@v4
+        
+        - name: Setup .NET
+          uses: actions/setup-dotnet@v4
+          with:
+            dotnet-version: '9.0.x'
+        
+        - name: Restore dependencies
+          run: dotnet restore
+        
+        - name: Build
+          run: dotnet build --configuration Release --no-restore
+        
+        - name: Publish Windows x64
+          run: dotnet publish -c Release -r win-x64 --self-contained -p:PublishSingleFile=false -o ./publish/win-x64
+        
+        - name: Create ZIP archive
+          run: |
+            cd publish
+            zip -r ../KafkaTester-win-x64.zip win-x64/
+            cd ..
+        
+        - name: Extract version from tag
+          id: get_version
+          run: |
+            if [ "${{ github.event_name }}" == "workflow_dispatch" ]; then
+              echo "VERSION=${{ github.event.inputs.version }}" >> $GITHUB_OUTPUT
+            else
+              echo "VERSION=${GITHUB_REF#refs/tags/}" >> $GITHUB_OUTPUT
+            fi
+        
+        - name: Create Release
+          uses: softprops/action-gh-release@v1
+          with:
+            tag_name: ${{ steps.get_version.outputs.VERSION }}
+            name: Release ${{ steps.get_version.outputs.VERSION }}
+            body: |
+              ## Kafka Tester ${{ steps.get_version.outputs.VERSION }}
+              
+              ### Download
+              - **Windows x64**: KafkaTester-win-x64.zip (extract and run KafkaTester.exe)
+              
+              ### What's New
+              - Bug fixes and improvements
+              
+              ### Usage
+              ```
+              KafkaTester.exe --broker <broker-url> --username <user> --password <pass>
+              ```
+              
+              Example:
+              ```
+              KafkaTester.exe --broker pkc-abc.us-east-1.aws.confluent.cloud:9092 --username myuser --password mypass
+              ```
+              
+              Run with `--help` for more information.
+              
+              ---
+              *Built with GitHub Copilot and GitHub Actions*
+            files: |
+              KafkaTester-win-x64.zip
+            draft: false
+            prerelease: false
+          env:
+            GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         description: 'Release version (e.g., v1.0.0)'
         required: true
         default: 'v1.0.0'
